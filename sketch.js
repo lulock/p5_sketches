@@ -1,8 +1,11 @@
 let bullets = [],
   tower,
   player,
+  player_2,
+  players,
   particles = [],
-  BULLET_SIZE = 12;
+  BULLET_SIZE = 12,
+  IDs = [1,2,3,4,5,6,7,8,9,10];
 
   function setup() {
     // set up canvas
@@ -11,8 +14,11 @@ let bullets = [],
     // init tower unit; spawn randomly
     tower = new Unit(createVector(random(width-100),random(height-100)), 55);
 
-    // init playre unit; spawn in centre of canvas
+    // init player unit; spawn in centre of canvas
     player = new Unit(createVector(width/2,height/2), 20);
+    
+    // init player 2 unit; spawn in corney of canvas
+    player_2 = new Unit(createVector(100,100), 20);
 
     // add 10 random particles as enemies!
     for(let i = 0;i<10;i++){
@@ -23,6 +29,9 @@ let bullets = [],
     strokeWeight(6.0);
     stroke(50, 50, 20);
     fill(100)
+
+    // shuffle IDs
+    IDs.sort(() => Math.random() - 0.5)
 }
 
 // every loop, draw to canvas...
@@ -41,10 +50,16 @@ function draw() {
 
     // check collision with player
     let partCol = Collision(particles[i].x, particles[i].y,particles[i].r,particles[i].r, player.position.x, player.position.y, player.size, player.size);
+    let partCol2 = Collision(particles[i].x, particles[i].y,particles[i].r,particles[i].r, player_2.position.x, player_2.position.y, player_2.size, player_2.size);
     
     // particle size determines damage to player
     if(partCol){
       player.health -=.1*(particles[i].r);
+    }
+
+    // particle size determines damage to player
+    if(partCol2){
+      player_2.health -=.1*(particles[i].r);
     }
   }
   
@@ -71,7 +86,7 @@ function draw() {
     pop()
   }
 
-  // player
+  // player 1
   if (player.health > 0){
     push()
 
@@ -113,6 +128,31 @@ function draw() {
 
   } 
 
+  // player 2
+  if (player_2.health > 0){
+    push()
+
+    strokeWeight(4);
+    stroke(255, 204, 50);
+    fill(250);
+    strokeWeight(0.0);
+    circle(player_2.position.x, player_2.position.y, player_2.size);
+    describe('white circle with black outline in mid of gray canvas');
+    pop()
+
+    push()
+    // player health bar
+    stroke(50, 50, 20);
+    rect(player_2.position.x-tower.size/2, player_2.position.y-30, tower.size, 5,1)
+    pop()
+
+    push()
+    stroke(120, 60, 80);
+    rect(player_2.position.x-tower.size/2, player_2.position.y-30, (tower.size * player_2.health/100), 5,1)
+    pop()
+
+  } 
+
   bullets.forEach(function shoot(bvalue, index){
     push()
 
@@ -125,10 +165,16 @@ function draw() {
     bvalue.position.x += bvalue.direction.x * 1/10
     bvalue.position.y += bvalue.direction.y * 1/10
 
-    let col = Collision(bvalue.position.x, bvalue.position.y,  bvalue.r,  bvalue.r, tower.position.x, tower.position.y, tower.size, tower.size);
+    let col = false;
 
-    if(col) {
-      tower.health -= 10;
+    if (tower.health > 0){
+  
+      col = Collision(bvalue.position.x, bvalue.position.y,  bvalue.r,  bvalue.r, tower.position.x, tower.position.y, tower.size, tower.size);
+  
+      if(col) {
+        tower.health -= 10;
+      }
+
     }
 
     // draw bullet only if within bounds, otherwise remove bullet
@@ -158,6 +204,22 @@ function draw() {
     player.position.y += 5;
   }
 
+  if (keyIsDown(87)) {
+    player_2.position.y -= 5;
+  }
+
+  if (keyIsDown(83)) {
+    player_2.position.y += 5;
+  }
+
+  if (keyIsDown(68)) {
+    player_2.position.x += 5;
+  }
+
+  if (keyIsDown(65)) {
+    player_2.position.x -= 5;
+  }
+
 }
 
 // load bullet on click
@@ -177,11 +239,16 @@ let Collision = function(x1,y1,w1,h1,x2,y2,w2,h2) {
     }
 };
 
-// simple Unit class
-let Unit = function(position, size) {
-  this.position = position.copy();
-  this.size = size;
-  this.health = 100;
+// simple unit class
+class Unit {
+  // setting the position, size, health, and unique ID
+  constructor(position, size){
+    this.ID = IDs.pop()
+    console.log(this.ID)
+    this.position = position.copy();
+    this.size = size;
+    this.health = 100;
+  }
 };
 
 // enemy particle class
