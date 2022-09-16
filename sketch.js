@@ -5,7 +5,8 @@ let bullets = [],
   players,
   particles = [],
   BULLET_SIZE = 12,
-  IDs = [1,2,3,4,5,6,7,8,9,10];
+  IDs = [1,2,3,4,5,6,7,8,9,10],
+  timer = 5;
 
   function setup() {
     // set up canvas
@@ -42,6 +43,30 @@ function draw() {
   
   // clear background (black)
   background(0);
+
+  // abilities bar
+  push()
+  strokeWeight(2)
+  stroke(0, 0, 0);
+  fill(0, 0, 15);
+  rect(width/2 - 50, height - 51, 50, 50);
+  rect(width/2, height - 51, 50, 50);
+
+  push()
+  textSize(10);
+  fill(250);
+  text('Q', width/2 - 50, height - 40);
+  text('W', width/2 + 2, height - 40);
+  pop()
+
+  translate(width/2 - 42, height - 42);
+  drawHeart(35,35)
+  translate(50, 0);
+  
+  drawStar(35,35)
+
+  describe('two gold rectangles');
+  pop()
 
   // for each enemy particle, create and move
   for(let i = 0;i<particles.length;i++) {
@@ -204,23 +229,101 @@ function draw() {
     player.position.y += 5;
   }
 
-  if (keyIsDown(87)) {
-    player_2.position.y -= 5;
-  }
+  // W
+  // if (keyIsDown(87)) {
+  //   // player_2.position.y -= 5;
+  // }
 
+  // S
   if (keyIsDown(83)) {
     player_2.position.y += 5;
   }
 
+  // D
   if (keyIsDown(68)) {
     player_2.position.x += 5;
   }
 
+  // A
   if (keyIsDown(65)) {
     player_2.position.x -= 5;
   }
 
 }
+
+function keyPressed() {
+  print(player.health)
+  if (keyCode === 87) {
+    if(player.health <= 95){
+      player.health += 5;
+    }else if(player.health.toFixed()<100){
+      player.health +=1;
+      player.health.toFixed();
+
+    }
+  }
+}
+// draw a 8-bit heart
+function drawHeart(w,h) {
+  let heart = [
+    [0,1,1,0,1,1,0],
+    [1,1,1,1,1,1,1],
+    [1,1,1,1,1,1,1],
+    [1,1,1,1,1,1,1],
+    [0,1,1,1,1,1,0],
+    [0,0,1,1,1,0,0],
+    [0,0,0,1,0,0,0]
+  ];
+  
+  push()
+  for (var x = 0; x < 7; x++) {
+		for (var y = 0; y <7; y++) {
+      // print(heart[x])
+      if(heart[y][x]){
+        strokeWeight(1);
+        stroke(0);
+        fill(0, 100, 100);
+        rect(x*(w/7), y*(h/7), w/7, h/7);
+      }
+		}
+	}
+
+  pop()
+}
+// cooldown
+function cooldown(key) {
+  if(key == 87){
+    ellipse(width/2, height/2, 50,50)
+  }
+}
+// draw a 8-bit star
+function drawStar(w,h) {
+  let star = [
+    [0,0,0,0,0,0,1],
+    [0,0,1,1,0,1,0],
+    [0,0,0,1,1,0,0],
+    [0,0,1,1,1,1,0],
+    [0,1,1,1,0,1,0],
+    [1,1,1,0,0,0,0],
+    [1,1,0,0,0,0,0]
+  ];
+  
+  push()
+  for (var x = 0; x < 7; x++) {
+		for (var y = 0; y <7; y++) {
+      // print(heart[x])
+      if(star[x][y]){
+        strokeWeight(1);
+        stroke(0);
+        fill(0, 0, 100);
+        rect(x*(w/7), y*(h/7), w/7, h/7);
+      }
+		}
+	}
+
+  pop()
+}
+
 
 // load bullet on click
 function mouseClicked() {
