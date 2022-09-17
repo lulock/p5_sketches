@@ -44,30 +44,6 @@ function draw() {
   // clear background (black)
   background(0);
 
-  // abilities bar
-  push()
-  strokeWeight(2)
-  stroke(0, 0, 0);
-  fill(0, 0, 15);
-  rect(width/2 - 50, height - 51, 50, 50);
-  rect(width/2, height - 51, 50, 50);
-
-  push()
-  textSize(10);
-  fill(250);
-  text('Q', width/2 - 50, height - 40);
-  text('W', width/2 + 2, height - 40);
-  pop()
-
-  translate(width/2 - 42, height - 42);
-  drawHeart(35,35)
-  translate(50, 0);
-  
-  drawStar(35,35)
-
-  describe('two gold rectangles');
-  pop()
-
   // for each enemy particle, create and move
   for(let i = 0;i<particles.length;i++) {
     particles[i].createParticle();
@@ -207,11 +183,37 @@ function draw() {
       bvalue.createParticle()
     } else { 
       bullets.splice(index, 1);
-      console.log(bullets.length)
+      // console.log(bullets.length)
     }
 
     pop()
   });
+
+  // abilities bar
+  push()
+  strokeWeight(2)
+  stroke(0, 0, 0);
+  fill(0, 0, 15);
+  rect(width/2 - 50, height - 51, 50, 50);
+  rect(width/2, height - 51, 50, 50);
+
+  push()
+  textSize(10);
+  fill(250);
+  text('Q', width/2 - 50, height - 40);
+  text('W', width/2 + 2, height - 40);
+  pop()
+
+  translate(width/2 - 42, height - 42);
+  drawHeart(35,35)
+  translate(50, 0);
+  
+  drawStar(35,35)
+
+  describe('two gold rectangles');
+  pop()
+
+  // key functions
 
   if (keyIsDown(LEFT_ARROW)) {
     player.position.x -= 5;
@@ -251,18 +253,26 @@ function draw() {
 
 }
 
+// key functions
 function keyPressed() {
-  print(player.health)
-  if (keyCode === 87) {
-    if(player.health <= 95){
-      player.health += 5;
-    }else if(player.health.toFixed()<100){
-      player.health +=1;
-      player.health.toFixed();
+  console.log(player.health)
 
-    }
+  // Q key for player health boost
+  if (keyCode == 81) {
+    boostHealth(5);
+  }
+   // W key for some other combat ability ...
+  if (keyCode == 87) {
+      console.log("ABILITY ATTACK")
   }
 }
+
+// boost health
+
+function boostHealth(num){
+  player.health = Math.min(Math.max(player.health + num, 0), 100)
+}
+
 // draw a 8-bit heart
 function drawHeart(w,h) {
   let heart = [
@@ -290,12 +300,7 @@ function drawHeart(w,h) {
 
   pop()
 }
-// cooldown
-function cooldown(key) {
-  if(key == 87){
-    ellipse(width/2, height/2, 50,50)
-  }
-}
+
 // draw a 8-bit star
 function drawStar(w,h) {
   let star = [
@@ -335,7 +340,7 @@ function mouseClicked() {
 let Collision = function(x1,y1,w1,h1,x2,y2,w2,h2) {
   if (x1 < x2+w2 && x2 < x1+w1 &&
     y1 < y2+h2 && y2 < y1+h1) {
-      print("collision")
+      // print("collision")
       return true
     } else {  
       return false
@@ -347,7 +352,7 @@ class Unit {
   // setting the position, size, health, and unique ID
   constructor(position, size){
     this.ID = IDs.pop()
-    console.log(this.ID)
+    // console.log(this.ID)
     this.position = position.copy();
     this.size = size;
     this.health = 100;
