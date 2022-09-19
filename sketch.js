@@ -8,7 +8,15 @@ let bullets = [],
   BULLET_SIZE = 6,
   BAR_SIZE = 55,
   IDs = [1,2,3,4,5,6,7,8,9,10],
-  timer = 5;
+  timer = 5,
+  sliderGroup = [],
+  X,
+  Y,
+  Z,
+  centerX,
+  centerY,
+  centerZ,
+  h = 20;
 
   function setup() {
 
@@ -16,7 +24,20 @@ let bullets = [],
     colorMode(HSB);
 
     // set up canvas
-    createCanvas(710, 400);
+    // createCanvas(710, 400);
+    createCanvas(710, 400, WEBGL);
+
+    //create sliders
+    for (var i = 0; i < 6; i++) {
+      if (i === 2) {
+        sliderGroup[i] = createSlider(10, 400, 200);
+      } else {
+        sliderGroup[i] = createSlider(-400, 400, 0);
+      }
+      h = map(i, 0, 6, 5, 85);
+      sliderGroup[i].position(10, height + h);
+      sliderGroup[i].style('width', '80px');
+    }
 
     // init abilities bar ui_unit
     abilities_bar = new AbilityBar(createVector(width/2 - 50, height - 51), 50)
@@ -36,7 +57,8 @@ let bullets = [],
     }
 
     // shuffle IDs for no good reason
-    IDs.sort(() => Math.random() - 0.5)
+    IDs.sort(() => Math.random() - 0.5);
+
 }
 
 // every loop, draw to canvas...
@@ -44,6 +66,14 @@ function draw() {
   
   // clear background (black)
   background(0);
+  // assigning sliders' value to each parameters
+  X = sliderGroup[0].value();
+  Y = sliderGroup[1].value();
+  Z = sliderGroup[2].value();
+  centerX = sliderGroup[3].value();
+  centerY = sliderGroup[4].value();
+  centerZ = sliderGroup[5].value();
+  camera(X, Y, Z, centerX, centerY, centerZ, 0, 1, 0);
 
   // for each enemy particle, create and move
   for(let i = 0;i<particles.length;i++) {
@@ -324,7 +354,8 @@ class Tower extends Unit {
 
       translate(this.position.x, this.position.y);
 
-      rect(0, 0, this.size, this.size, 20, 15+(100/this.health), 10, 5+(1000/this.health));
+      // rect(0, 0, this.size, this.size, 20, 15+(100/this.health), 10, 5+(1000/this.health));
+      box(this.size);
       describe('white rect with outline and round edges of different radii that changes upon declining health');
       
       // tower health bar
@@ -355,7 +386,8 @@ class Player extends Unit {
       noStroke();
 
       translate(this.position.x, this.position.y);
-      circle(0, 0, this.size);
+      // circle(0, 0, this.size);
+      sphere(this.size);
       describe('white circle');
       
       // player health bar
