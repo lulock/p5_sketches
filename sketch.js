@@ -48,7 +48,8 @@ function draw() {
   // for each enemy particle, create and move
   for(let i = 0;i<particles.length;i++) {
     particles[i].createParticle();
-    particles[i].moveParticle();
+    // particles[i].moveParticle();
+    particles[i].moveToUnit(tower);
 
     // check collision with player(s)
     let partCol = Collision(particles[i].x, particles[i].y,particles[i].r,particles[i].r, player.position.x, player.position.y, player.size, player.size);
@@ -382,6 +383,7 @@ class EnemyParticle {
     this.r = random(1,8);
     this.xSpeed = random(-2,2);
     this.ySpeed = random(-1,1.5);
+    this.targetPosition = createVector(random(-100, 100), random(-100, 100));
   }
 
 // particle creation
@@ -404,6 +406,22 @@ class EnemyParticle {
     // move at constant speed
     this.x+=this.xSpeed;
     this.y+=this.ySpeed;
+  }
+
+  // particle motion
+  moveToUnit(unit) {
+    // bounce within canvas bounds
+    // if(this.x < 0 || this.x > width)
+    //   this.xSpeed*=-1;
+    // if(this.y < 0 || this.y > height)
+    //   this.ySpeed*=-1;
+    
+    // move at constant speed
+    this.x = lerp(this.x, unit.position.x + this.targetPosition.x, 0.005);
+    this.y = lerp(this.y, unit.position.y + this.targetPosition.y, 0.005);
+
+    // this.x+=this.xSpeed;
+    // this.y+=this.ySpeed;
   }
 
   // get position
