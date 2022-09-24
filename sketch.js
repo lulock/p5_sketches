@@ -8,7 +8,23 @@ let bullets = [],
   BULLET_SIZE = 6,
   BAR_SIZE = 55,
   IDs = [1,2,3,4,5,6,7,8,9,10],
-  timer = 5;
+  timer = 5,
+  ghost;
+
+var sprite_sheet;
+var cat_animation;
+
+  function preload(){
+    createCanvas(710, 400);
+
+    player = new Player(createVector(width/2,height/2), 20);
+    ghost = new Sprite(player.position.x, player.position.y, 90, 70);
+    ghost.addAni('running', 'assets/catruns001.png', 6);
+    ghost.addAni('idle', 'assets/catruns003.png', 3);
+    // ghost.ani.stop()
+    // cat_animation = loadAnimation('assets/catruns.png', {size:[90, 70], frames: 6});
+    // cat_animation = loadAnimation(sprite_sheet);
+  }
 
   function setup() {
 
@@ -25,7 +41,7 @@ let bullets = [],
     tower = new Tower(createVector(random(width-100),random(height-100)), 55);
 
     // init player unit; spawn in centre of canvas
-    player = new Player(createVector(width/2,height/2), 20);
+    player = new Player(createVector(width/2,height/2), 10);
     
     // init player 2 unit; spawn in corney of canvas
     player_2 = new Player(createVector(100,100), 20);
@@ -43,7 +59,15 @@ let bullets = [],
 function draw() {
   
   // clear background (black)
+  clear();
   background(0);
+  // animation(cat_animation, width/2,height/2);
+  	// stop/play a sprite animation
+	// if (mouse.pressing()) {
+	// 	ghost.ani.stop();
+	// } else {
+	// 	ghost.ani.play();
+	// }
 
   // for each enemy particle, create and move
   for(let i = 0;i<particles.length;i++) {
@@ -98,6 +122,8 @@ function draw() {
 
   // player 1
   player.display();
+  // clear();
+  // ghost.ani.draw(player.position.x, player.position.y)
 
   // player 2
   player_2.display();
@@ -107,27 +133,47 @@ function draw() {
 
   // key functions
   controls();
+  
 
+}
+
+function keyReleased(){
+  // ghost.ani.stop()
+  ghost.ani = 'idle';
 }
 
 function controls(){
   
   if (keyIsDown(LEFT_ARROW)) {
     player.position.x -= 5;
+    ghost.ani = 'running';
+    ghost.x -= 5;
+    ghost.mirror.x = false;
   }
-
+  
   if (keyIsDown(RIGHT_ARROW)) {
     player.position.x += 5;
+    ghost.ani = 'running';
+    ghost.x += 5;
+    ghost.mirror.x = true;
   }
-
+  
+  
   if (keyIsDown(UP_ARROW)) {
     player.position.y -= 5;
+    // ghost.ani.play();
+    ghost.ani = 'running';
+    ghost.y -= 5;
   }
-
+  
   if (keyIsDown(DOWN_ARROW)) {
     player.position.y += 5;
+    ghost.ani = 'running';
+    // ghost.ani.play();
+    ghost.y += 5;
   }
-
+  
+  // ghost.ani.play();
   // Z
   if (keyIsDown(90)) {
     player_2.position.y += 5;
