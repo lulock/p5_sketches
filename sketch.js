@@ -4,7 +4,7 @@ let bullets = [],
   player_2,
   players,
   abilities_bar,
-  particles = [],
+  creeps = [],
   BULLET_SIZE = 6,
   BAR_SIZE = 55,
   IDs = [1,2,3,4,5,6,7,8,9,10],
@@ -13,14 +13,22 @@ let bullets = [],
 
 var sprite_sheet;
 var cat_animation;
+var ALLY = 0;
+var ENEMY = 1;
 
   function preload(){
     createCanvas(710, 400);
 
-    player = new Player(createVector(width/2,height/2), 20);
+    player_2 = new Player(createVector(100,100), 20);
+    player = new Player(createVector(width/2,height/2), 50);
     ghost = new Sprite(player.position.x, player.position.y, 90, 70);
+    bat = new Sprite(player_2.position.x, player_2.position.y, 30, 30);
+    bat.scale = 1.6;
+    ghost.scale = 0.6;
     ghost.addAni('running', 'assets/catruns001.png', 6);
+    bat.addAni('running', 'assets/bat001.png', 4);
     ghost.addAni('idle', 'assets/catruns003.png', 3);
+    bat.addAni('idle', 'assets/bat001.png', 1);
     // ghost.ani.stop()
     // cat_animation = loadAnimation('assets/catruns.png', {size:[90, 70], frames: 6});
     // cat_animation = loadAnimation(sprite_sheet);
@@ -38,17 +46,18 @@ var cat_animation;
     abilities_bar = new AbilityBar(createVector(width/2 - 50, height - 51), 50)
 
     // init tower unit; spawn randomly
-    tower = new Tower(createVector(random(width-100),random(height-100)), 55);
+    tower = new Tower(createVector(random(width-100),random(height-100)), 55, ENEMY);
 
     // init player unit; spawn in centre of canvas
-    player = new Player(createVector(width/2,height/2), 10);
+    // player = new Player(createVector(width/2,height/2), 10);
     
     // init player 2 unit; spawn in corney of canvas
     player_2 = new Player(createVector(100,100), 20);
 
-    // add 10 random particles as enemies! TODO: make particle system?
-    for(let i = 0;i<10;i++){
-      particles.push(new EnemyParticle());
+    // add 5 randomly placed creeps as enemies! TODO: make particle system?
+    for(let i = 0;i<5;i++){
+      creeps.push(new Creep());
+      // creeps.push(new EnemyParticle());
     }
 
     // shuffle IDs for no good reason
@@ -69,26 +78,29 @@ function draw() {
 	// 	ghost.ani.play();
 	// }
 
-  // for each enemy particle, create and move
-  for(let i = 0;i<particles.length;i++) {
-    particles[i].createParticle();
-    // particles[i].moveParticle();
-    particles[i].moveToUnit(tower);
+  // for each enemy creep, create and move towards tower
+  for(let i = 0;i<creeps.length;i++) {
+    creeps[i].display();
+    // creeps[i].moveParticle();
+    creeps[i].moveToUnit(tower);
 
     // check collision with player(s)
-    let partCol = Collision(particles[i].x, particles[i].y,particles[i].r,particles[i].r, player.position.x, player.position.y, player.size, player.size);
-    let partCol2 = Collision(particles[i].x, particles[i].y,particles[i].r,particles[i].r, player_2.position.x, player_2.position.y, player_2.size, player_2.size);
+    let partCol = Collision(creeps[i].position.x, creeps[i].position.y,creeps[i].size,creeps[i].size, player.position.x, player.position.y, player.size, player.size);
+    let partCol2 = Collision(creeps[i].position.x, creeps[i].position.y,creeps[i].size,creeps[i].size, player_2.position.x, player_2.position.y, player_2.size, player_2.size);
     
     // particle size determines damage to player
     if(partCol){
-      player.health -=.1*(particles[i].r);
+      player.health -=.1*(creeps[i].size);
     }
     // particle size determines damage to player
     if(partCol2){
-      player_2.health -=.1*(particles[i].r);
+      player_2.health -=.1*(creeps[i].size);
     }
 
   }
+
+  // if(player_2.attackUnit(player)){
+  // }
 
   // Ctrl
   if (keyIsDown(17)) {
@@ -98,27 +110,29 @@ function draw() {
   // tower
   tower.display()
   
-  // player 1 bullets 
-  bullets.forEach(function shoot(bullet, index){
-    bullet.createParticle();
-    bullet.moveParticle();
+  // player 1 bullets TODO: put this in Unit class update function. Give Bullet class it's own collision detection
+  // player.bullets.forEach(function shoot(bullet, index){
+  //   bullet.createParticle();
+  //   bullet.moveParticle();
 
-    if (bullet.isDead()){
-      bullets.splice(index, 1);
-    }
+  //   if (bullet.isDead()){
+  //     bullets.splice(index, 1);
+  //   }
 
-    let col = false;
+  //   let col = false;
 
-    if (tower.health > 0){
+  //   if (tower.health > 0){
 
-      col = Collision(bullet.position.x, bullet.position.y,  bullet.r,  bullet.r, tower.position.x, tower.position.y, tower.size, tower.size);
+  //     col = Collision(bullet.position.x, bullet.position.y,  bullet.r,  bullet.r, tower.position.x, tower.position.y, tower.size, tower.size);
 
-      if(col) {
-        tower.health -= 10;
-      }
+  //     if(col) {
+  //       tower.health -= 10;
+  //     }
 
-    };
-  });
+  //   };
+  // });
+
+  player.update();
 
   // player 1
   player.display();
@@ -133,13 +147,19 @@ function draw() {
 
   // key functions
   controls();
-  
+
+  // test get enemey creeps
+  // let creeps = player.getNearbyCreeps(100);
+  // if (creeps.length > 0){
+  //   console.log(creeps);
+  // }
 
 }
 
 function keyReleased(){
   // ghost.ani.stop()
   ghost.ani = 'idle';
+  bat.ani = 'idle';
 }
 
 function controls(){
@@ -177,23 +197,66 @@ function controls(){
   // Z
   if (keyIsDown(90)) {
     player_2.position.y += 5;
+    bat.ani = 'running';
+    bat.y += 5;
   }
 
   // S
   if (keyIsDown(83)) {
     player_2.position.y -= 5;
+    bat.ani = 'running';
+    bat.y -= 5;
   }
 
   // D
   if (keyIsDown(68)) {
     player_2.position.x += 5;
+    bat.mirror.x = true;
+    bat.ani = 'running';
+    bat.x += 5;
   }
 
   // A
   if (keyIsDown(65)) {
     player_2.position.x -= 5;
+    bat.mirror.x = false;
+    bat.ani = 'running';
+    bat.x -= 5;
   }
 
+}
+
+// helper functions
+
+function getCreeps(isEnemyTeam = true){
+  if (isEnemyTeam){
+    return creeps;
+  }else{
+    return [] // currently only enemy creeps. return empty list
+  }
+}
+
+function getUnits(team){
+  print("team is", team)
+  let allUnits = [player, player_2, tower].concat(creeps);
+  let selectedUnits = [];
+  allUnits.forEach((unit) => {
+    print("unit team is", unit.team)
+    if (unit.team === team){
+      selectedUnits.push(unit);
+    }
+  });
+
+  selectedUnits = selectedUnits.filter((unit) => {
+    return unit.isDead() === false;
+  });
+
+  console.log("all units")
+  console.log(allUnits)
+  console.log("selected units")
+  console.log(selectedUnits)
+
+  return selectedUnits;// currently only enemy creeps. return empty list
 }
 
 // key functions
@@ -294,7 +357,7 @@ function drawLine(){
 
 // load bullet on click
 function mouseClicked() {
-  bullets.push(new Particle(createVector(player.position.x,player.position.y),createVector(mouseX - player.position.x,mouseY - player.position.y)));
+  player.bullets.push(new Bullet(createVector(player.position.x,player.position.y),createVector(mouseX - player.position.x,mouseY - player.position.y)));
 }
 
 
@@ -303,25 +366,72 @@ let Collision = function(x1,y1,w1,h1,x2,y2,w2,h2) {
   if (x1 < x2+w2 && x2 < x1+w1 &&
     y1 < y2+h2 && y2 < y1+h1) {
       // print("collision")
-      return true
+      return true;
     } else {  
-      return false
+      return false;
     }
 };
 
 // simple unit class
 class Unit {
   // setting the position, size, health, and unique ID
-  constructor(position, size){
+  constructor(position, size, team = ALLY){
     this.ID = IDs.pop()
     // console.log(this.ID)
-    this.position = position.copy();
+    this.position = position.copy(); // TODO: is this corner coord or centre?
     this.size = size;
     this.health = 100;
+    this.attackRange = 100;
+    this.bullets = [];
+    this.team = team;
+  };
+
+  // get position
+  getPosition() {
+    return this.position;
   }
+
+  update(){
+
+    // use a reverse for-loop to clean up dead bullets
+    var i;
+    for (i = this.bullets.length - 1; i >= 0; i -= 1) {
+        if (this.bullets[i].isDead()) {
+            this.bullets.splice(i, 1);
+        }
+    }
+
+    this.bullets.forEach(function shoot(bullet){
+      bullet.createParticle();
+      bullet.moveParticle();
+    });
+
+  };
+
+  // change this to nearby units
+  getNearbyCreeps(radius = this.attackRange, isEnemyTeam = true){
+    let creeps = getCreeps(isEnemyTeam);
+    let nearby = [];
+    creeps.forEach((creep) => {
+      if (dist(creep.x,creep.y, this.position.x, this.position.y) <= radius){
+        nearby.push(creep);
+      };
+    });
+    return nearby;
+  };
+
+  isDead(){
+    return this.health <= 0;
+    // if (this.health <= 0) {
+    //   return true;
+    // } else {
+    //   return false;
+    // }
+  };
+
 };
 
-class AbilityBar extends Unit {
+class AbilityBar extends Unit { // TODO: make this a UIUnit and make that a different thing lol
   constructor(position, size) {
     super(position, size)
   }
@@ -356,8 +466,8 @@ class AbilityBar extends Unit {
 }
 
 class Tower extends Unit {
-  constructor(position, size) {
-    super(position, size)
+  constructor(position, size, team) {
+    super(position, size, team)
   }
 
   display() {
@@ -387,13 +497,13 @@ class Tower extends Unit {
 };
 
 class Player extends Unit {
-  constructor(position, size) {
-    super(position, size)
+  constructor(position, size, team) {
+    super(position, size, team)
   }
 
   display() {
 
-    if (this.health>0) {
+    if (this.health > 0) {
       push()
 
       // stroke(50,50,50)
@@ -402,8 +512,8 @@ class Player extends Unit {
       noStroke();
 
       translate(this.position.x, this.position.y);
-      circle(0, 0, this.size);
-      describe('white circle');
+      // circle(0, 0, this.size);
+      // describe('white circle');
       
       // player health bar
       strokeWeight(6.0);
@@ -419,6 +529,51 @@ class Player extends Unit {
   }
 };
 
+class Creep extends Unit {
+  constructor() {
+    super(createVector(random(0,width), random(0,height)), random(1,8), ENEMY);
+    this.xSpeed = random(-2,2);
+    this.ySpeed = random(-1,1.5);
+    this.targetPosition = createVector(random(-200, 200), random(-200, 200));
+  }
+
+  display(){
+    if (this.health > 0) {
+      push();
+      noStroke();
+      fill(20,30,50);
+      circle(this.position.x,this.position.y,this.size);
+      pop();
+    }
+  }
+
+  // update(){
+  //   super.update();
+  //   // bounce within canvas bounds
+  //   // if(this.position.x < 0 || this.position.x > width){
+  //   //   this.xSpeed*=-1;
+  //   // }
+  //   // if(this.position.y < 0 || this.position.y > height){
+  //   //   this.ySpeed*=-1;
+  //   // }
+  // }
+
+    // particle motion
+    moveToUnit(unit) {
+
+      // move at constant speed
+      this.position.x = lerp(this.position.x, unit.position.x + this.targetPosition.x, 0.005);
+      this.position.y = lerp(this.position.y, unit.position.y + this.targetPosition.y, 0.005);
+  
+      // this.x+=this.xSpeed;
+      // this.y+=this.ySpeed;
+    }
+
+    getSpeed(){
+      return [this.xSpeed, this.ySpeed];
+    }
+}
+
 // enemy particle class
 class EnemyParticle {
   // setting the co-ordinates, radius and the
@@ -429,7 +584,7 @@ class EnemyParticle {
     this.r = random(1,8);
     this.xSpeed = random(-2,2);
     this.ySpeed = random(-1,1.5);
-    this.targetPosition = createVector(random(-100, 100), random(-100, 100));
+    this.targetPosition = createVector(random(-200, 200), random(-200, 200));
   }
 
 // particle creation
@@ -444,10 +599,12 @@ class EnemyParticle {
 // particle motion
   moveParticle() {
     // bounce within canvas bounds
-    if(this.x < 0 || this.x > width)
+    if(this.x < 0 || this.x > width){
       this.xSpeed*=-1;
-    if(this.y < 0 || this.y > height)
+    }
+    if(this.y < 0 || this.y > height){
       this.ySpeed*=-1;
+    }
     
     // move at constant speed
     this.x+=this.xSpeed;
@@ -456,12 +613,7 @@ class EnemyParticle {
 
   // particle motion
   moveToUnit(unit) {
-    // bounce within canvas bounds
-    // if(this.x < 0 || this.x > width)
-    //   this.xSpeed*=-1;
-    // if(this.y < 0 || this.y > height)
-    //   this.ySpeed*=-1;
-    
+
     // move at constant speed
     this.x = lerp(this.x, unit.position.x + this.targetPosition.x, 0.005);
     this.y = lerp(this.y, unit.position.y + this.targetPosition.y, 0.005);
@@ -470,35 +622,46 @@ class EnemyParticle {
     // this.y+=this.ySpeed;
   }
 
+  // particle ATTACKS
+  attackUnit(unit) {
+    let col = Collision(this.x, this.y,  this.r+100,  this.r+100, unit.position.x, unit.position.y, unit.size, unit.size);
+
+    if(col){
+      console.log("SHOOT")
+    }
+  }
+
   // get position
   getPosition() {
     return [this.x, this.y]
   }
 
   // get speed
-  getPosition() {
+  getSpeed() {
     return [this.xSpeed, this.ySpeed]
   }
 
 };
 
 // bullet particle class
-class Particle {
+class Bullet {
   // setting the co-ordinates, radius and the
   // speed of a particle in both the co-ordinates axes.
-  constructor(position, direction){
+  constructor(position, direction, team = ALLY){
     this.position = position.copy();
     this.direction = direction.copy();
     this.lifespan = 255;
     this.acceleration = createVector(0, 0.05);
     this.velocity = createVector(random(-1, 1), random(-1, 0));
     this.r = BULLET_SIZE;
+    this.hit = false;
+    this.team = team;
   }
 
   // particle creation
   createParticle() {
-    if (this.position.x >= 0 && this.position.x <= width && this.position.y >= 0 && this.position.y <= height){
-      
+    let withinBounds = this.position.x >= 0 && this.position.x <= width && this.position.y >= 0 && this.position.y <= height;
+    if (withinBounds){
       push();
       // set colour
       strokeWeight(1);
@@ -515,17 +678,29 @@ class Particle {
 
   // particle motion
   moveParticle() {
-    if (this.position.x >= 0 && this.position.x <= width && this.position.y >= 0 && this.position.y <= height){
+    let withinBounds = this.position.x >= 0 && this.position.x <= width && this.position.y >= 0 && this.position.y <= height; 
+
+    if (withinBounds){
       this.position.x += this.direction.x * 1/10;
       this.position.y += this.direction.y * 1/10;
-    }else{
+    } else {
       this.lifespan = 0;
     };
+
+    let units = getUnits(ENEMY);
+    units.forEach((unit) => {
+      let col = Collision(this.position.x, this.position.y, this.r,  this.r, unit.position.x, unit.position.y, unit.size, unit.size);
+      if (col) {
+        unit.health -= this.r;
+        this.lifespan = 0;
+      }
+    });
   }
 
   // check if particle is dead
   isDead(){
-    return this.lifespan < 0;
+    // print("particle is dead")
+    return this.lifespan <= 0;
   };
 
 };
